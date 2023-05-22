@@ -12,6 +12,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import re, time
+import pyttsx3
 
 def save_audio(filename, frames):
     with wave.open(filename, 'wb') as f:
@@ -34,10 +35,17 @@ def recognize_speech(recognizer, audio_data, wake_word, result_queue):
         if wake_word in text:
             result_queue.put(True)
     except sr.UnknownValueError:
-        print("인식불가")
+        # print("인식불가")
+        pass
     except sr.RequestError:
         print("Couldn't get results from Google Speech Recognition service")
         result_queue.put(False)
+
+def text_to_speech(text, voice_id):
+    engine = pyttsx3.init()
+    engine.setProperty("voice", voice_id)
+    engine.say(text)
+    engine.runAndWait()
 
 
 def main():
@@ -146,12 +154,16 @@ def main():
             if luda_text:
                 if not luda_text in messages:
                     messages.append(luda_text)
-                    print(f"🙆🏻‍♀️이루다: {luda_text}")
+                    print(f"🙆🏻‍♀️: {luda_text}")
+                    input_text = luda_text
+                    voice_id = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_KO-KR_HEAMI_11.0"
+
+                    text_to_speech(input_text, voice_id)
 
     except Exception as e:
         print(e)
     finally:
-        time.sleep(2)
+        time.sleep(3)
 
 
 options = Options()
