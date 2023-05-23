@@ -47,6 +47,26 @@ def text_to_speech(text, voice_id):
     engine.say(text)
     engine.runAndWait()
 
+def read_values_thread(driver, messages):
+    voice_id = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_KO-KR_HEAMI_11.0"
+    while True:
+        try:
+            xpath = "//div[@class='css-1rynq56 r-ubezar r-16dba41 r-oam9g7 r-1aittka r-cqee49']"
+            luda_texts = driver.find_elements(By.XPATH, f"{xpath}")
+
+            for i, luda_text in enumerate(reversed(luda_texts[:5])):
+                luda_text = luda_text.text.strip()
+
+                if luda_text:
+                    if not luda_text in messages:
+                        messages.append(luda_text)
+                        print(f"Her: {luda_text}")
+                        text_to_speech(luda_text, voice_id)
+
+        except Exception as e:
+            print(e)
+        finally:
+            time.sleep(10)
 
 def main():
     recognizer = sr.Recognizer()
@@ -66,7 +86,7 @@ def main():
     buffer = []
     silence_counter = 0
     max_silence_counter = 25
-    start_text = "안녕"
+    start_text = "자기"
     buffer_size = 480
 
     result_queue = queue.Queue()
@@ -123,20 +143,6 @@ def main():
     print(voice_text)
 
     try:
-        # Get the last text (REPLACE CLASS NAMES of yours)
-        xpath = "//div[@class='css-1rynq56 r-ubezar r-16dba41 r-oam9g7 r-1aittka r-cqee49']"
-        luda_texts = driver.find_elements(By.XPATH, f"{xpath}")
-
-        # Retrieve last 5 messages we missed
-        for i, luda_text in enumerate(reversed(luda_texts[:5])):
-            luda_text = luda_text.text.strip()
-
-            if luda_text:
-                if not luda_text in messages:
-                    messages.append(luda_text)
-                    print(f"🙆🏻‍♀️이루다: {luda_text}")
-
-
         input_box = driver.find_element(By.XPATH, "/html/body/main/div[4]/div/div/div[1]/div/div/div/div[1]/div[2]/div[2]/div[2]/div/div/div/div[1]/div/div/div/div[2]/div[2]/textarea")
 
         time.sleep(1)
@@ -144,21 +150,6 @@ def main():
         time.sleep(1)
         input_box.send_keys(Keys.ENTER)
         time.sleep(2)
-
-        luda_texts = driver.find_elements(By.XPATH, f"{xpath}")
-
-        # Retrieve last 5 messages we missed
-        for i, luda_text in enumerate(reversed(luda_texts[:5])):
-            luda_text = luda_text.text.strip()
-
-            if luda_text:
-                if not luda_text in messages:
-                    messages.append(luda_text)
-                    print(f"🙆🏻‍♀️: {luda_text}")
-                    input_text = luda_text
-                    voice_id = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_KO-KR_HEAMI_11.0"
-
-                    text_to_speech(input_text, voice_id)
 
     except Exception as e:
         print(e)
@@ -180,6 +171,9 @@ driver.find_element(By.XPATH, "/html/body/main/div[4]/div/div/div[1]/div/div/div
 driver.implicitly_wait(3)
 
 messages = []
+
+t = threading.Thread(target=read_values_thread, args=(driver, messages))
+t.start()
 
 while True:
     main()
