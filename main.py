@@ -66,7 +66,7 @@ def read_values_thread(driver, messages):
         except Exception as e:
             print(e)
         finally:
-            time.sleep(10)
+            time.sleep(3)
 
 def main():
     recognizer = sr.Recognizer()
